@@ -1,0 +1,6 @@
+jobs.json
+sc-work/
+scatter-out/
+__pycache__/
+*.log
+run1/

@@ -1,0 +1,20 @@
+PASS: coordinator healthy
+PASS: dashboard is public and contains ShareCompute
+PASS: workers lists online smoke worker
+PASS: workers include labels gpu=smoke
+PASS: job A completes; job B cancels and never executes
+PASS: job 1 exit code is 0
+PASS: job 1 output contents
+PASS: job 2 exit code is 0
+PASS: job 2 roundtrip contents
+PASS: job C with --require gpu=smoke completes
+PASS: job C stdout captured
+PASS: job D submits with unmatched requirement
+PASS: job D stays pending after 10 s then cancels
+PASS: scatter exit code is 0
+PASS: scatter reports 2/2 done
+PASS: scatter merge hook reports exit 0
+PASS: scatter merged summary exists next to summary
+PASS: scatter merged summary matches summary
+PASS: scatter outputs and summary
+SMOKE: PASS

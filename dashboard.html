@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; base-uri 'none'; form-action 'none'">
+<link rel="icon" href="data:,">
+<title>ShareCompute · Dashboard</title>
+<style>
+:root{color-scheme:dark;--bg:#101419;--panel:#191f27;--line:#303945;--text:#edf1f7;--muted:#a5b1c2;--accent:#83b5ff}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}main{max-width:1280px;margin:auto;padding:28px}header,.toolbar,.section-head{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}h1{font-size:26px;letter-spacing:-.7px;margin:0}h2{font-size:19px;margin:0}p{margin:8px 0}.muted,small{color:var(--muted)}.eyebrow{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--accent)}.toolbar{margin:24px 0;padding:16px;background:var(--panel);border:1px solid var(--line);border-radius:12px}.token-field{flex:1;min-width:200px}label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}input,textarea,button{font:inherit}input,textarea{width:100%;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--text);padding:10px}textarea{resize:vertical;min-height:90px;font-family:ui-monospace,monospace}button{border:1px solid var(--line);background:#242d39;color:var(--text);padding:9px 15px;border-radius:7px;cursor:pointer}button:hover{border-color:var(--accent)}button:disabled{opacity:.5;cursor:wait}button.primary{background:var(--accent);color:#101419;border-color:var(--accent);font-weight:650}:focus-visible{outline:2px solid var(--accent);outline-offset:3px}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#89909c;margin-right:7px}.dot.online{background:#7bddb0}.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin:24px 0}.stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px}.stat strong{display:block;font-size:28px;font-weight:600}.stat span{color:var(--muted);font-size:13px}section{margin:28px 0}.section-head{margin-bottom:12px}.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:10px;background:var(--panel)}table{border-collapse:collapse;width:100%;text-align:left;white-space:nowrap}th{color:var(--muted);font-size:12px;font-weight:500;background:#151b22}th,td{padding:13px 16px;border-bottom:1px solid var(--line)}tbody tr:last-child td{border-bottom:0}.job-row{cursor:pointer}.job-row:hover,.job-row:focus{background:#242d39}.job-row.highlight{box-shadow:inset 3px 0 var(--accent);background:#23344b}.command{max-width:360px;overflow:hidden;text-overflow:ellipsis;font-family:ui-monospace,monospace;font-size:12px}.badge{border-radius:5px;padding:3px 8px;font-size:12px;background:#394351}.pending{color:#f6ce80;background:#3a3020}.assigned{color:#95bdff;background:#23374f}.done{color:#91e3b7;background:#203b31}.failed{color:#ffa5ab;background:#47272d}.cancelled{color:#c5aff4;background:#352b48}.detail td{white-space:normal;padding:20px}.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.detail h3{font-size:13px;color:var(--muted);margin:14px 0 6px}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:12px;max-height:320px;overflow:auto;margin:0;font-size:12px}.detail li{overflow-wrap:anywhere}.form-bottom{display:flex;align-items:end;gap:12px;margin-top:12px}.timeout{width:180px}#banner{padding:12px 16px;border:1px solid #9c565d;color:#ffb1b7;border-radius:8px;background:#342126}#submit-message{overflow-wrap:anywhere;color:var(--accent)}[hidden]{display:none!important}@media(max-width:700px){main{padding:16px}.stats{grid-template-columns:repeat(2,1fr)}.stat:first-child{grid-column:span 2}.stat{padding:12px}.detail-grid{grid-template-columns:1fr}.toolbar{align-items:end}.command{max-width:220px}th,td{padding:10px}.form-bottom{flex-wrap:wrap}}
+</style>
+</head>
+<body>
+<main>
+<header><div><div class="eyebrow">Your private compute farm</div><h1>ShareCompute</h1></div><div><span id="health-dot" class="dot"></span><span id="health-label">Checking coordinator</span><br><small id="updated">Not updated yet</small></div></header>
+<div class="toolbar"><div class="token-field"><label for="token">API token · saved in this browser</label><input id="token" type="password" autocomplete="off" placeholder="Paste your coordinator token" spellcheck="false"></div><button id="pause" type="button" aria-pressed="false">Pause refresh</button><small id="refresh-state">Refresh every 3 seconds</small></div>
+<p id="banner" role="alert" hidden></p>
+<div class="stats" aria-label="Farm statistics"><div class="stat"><span>Workers online</span><strong id="stat-workers">—</strong></div><div class="stat"><span>Pending</span><strong id="stat-pending">—</strong></div><div class="stat"><span>Running</span><strong id="stat-assigned">—</strong></div><div class="stat"><span>Done</span><strong id="stat-done">—</strong></div><div class="stat"><span>Failed</span><strong id="stat-failed">—</strong></div></div>
+<section><div class="section-head"><h2>Workers</h2><small>Online within the last 45 seconds</small></div><div class="table-wrap"><table><thead><tr><th>Name</th><th>Platform</th><th>Labels</th><th>Presence</th><th>Last seen</th><th>Current job</th></tr></thead><tbody id="workers"><tr><td colspan="6" class="muted">Waiting for worker data…</td></tr></tbody></table></div></section>
+<section><div class="section-head"><h2>Jobs</h2><small>Select a job to inspect its results</small></div><div class="table-wrap"><table><thead><tr><th>Job</th><th>Command</th><th>Status</th><th>Worker</th><th>Attempts</th><th>Created</th><th>Duration</th></tr></thead><tbody id="jobs"><tr><td colspan="7" class="muted">Waiting for job data…</td></tr></tbody></table></div></section>
+<section><div class="section-head"><h2>Submit a job</h2></div><form id="submit-form"><label for="command">Shell command</label><textarea id="command" required placeholder="echo hello-farm"></textarea><div class="form-bottom"><div class="timeout"><label for="timeout">Timeout (seconds)</label><input id="timeout" type="number" min="0.001" step="any" value="3600" required></div><button id="submit" class="primary" type="submit">Submit job</button></div><p><small>Attach files with the CLI or scatter evaluation.</small></p><p id="submit-message" role="status"></p></form></section>
+</main>
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const node = (tag, text, cls) => { const el = document.createElement(tag); if (text !== undefined) el.textContent = text; if (cls) el.className = cls; return el; };
+let paused = false, blocked = false, timer, generation = 0, refreshing = false;
+let workers = [], jobs = [], expanded = null, highlighted = null;
+const details = new Map(), controllers = new Set();
+try { $('token').value = localStorage.getItem('sharecompute-token') || ''; } catch (_) { /* Storage can be disabled. */ }
+function banner(message) { $('banner').textContent = message; $('banner').hidden = !message; }
+function refreshLabel() { $('refresh-state').textContent = blocked ? 'Refresh stopped · change token to resume' : paused ? 'Auto-refresh paused' : 'Refresh every 3 seconds'; }
+function stopRequests() { for (const controller of controllers) controller.abort(); controllers.clear(); }
+async function api(path, data) {
+  if (blocked) throw new Error('token missing or wrong');
+  const version = generation, controller = new AbortController();
+  controllers.add(controller);
+  const deadline = setTimeout(() => controller.abort(), 10000);
+  try {
+    const response = await fetch(path, {method: data === undefined ? 'GET' : 'POST', headers: {'X-Token': $('token').value, 'Content-Type': 'application/json'}, body: data === undefined ? undefined : JSON.stringify(data), cache: 'no-store', signal: controller.signal});
+    if (version !== generation) throw new Error('Token changed');
+    if (response.status === 401) {
+      blocked = true; clearTimeout(timer); stopRequests(); banner('token missing or wrong'); refreshLabel();
+      throw new Error('token missing or wrong');
+    }
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || `Request failed (${response.status})`);
+    return result;
+  } finally { clearTimeout(deadline); controllers.delete(controller); }
+}
+function report(error) { if (!blocked) banner(error.name === 'AbortError' ? 'Request interrupted or timed out. Retrying on the next refresh.' : error.message); }
+const short = id => id ? id.slice(0, 8) : '—';
+const date = value => value == null ? '—' : new Date(value * 1000).toLocaleString();
+function relative(seconds) { seconds = Math.max(0, Math.floor(seconds)); return seconds < 60 ? `${seconds}s ago` : seconds < 3600 ? `${Math.floor(seconds / 60)}m ago` : seconds < 86400 ? `${Math.floor(seconds / 3600)}h ago` : `${Math.floor(seconds / 86400)}d ago`; }
+function emptyRow(body, columns, text) { const row = node('tr'), cell = node('td', text, 'muted'); cell.colSpan = columns; row.append(cell); body.append(row); }
+function renderWorkers() {
+  const body = $('workers'); body.replaceChildren();
+  for (const worker of workers) {
+    const row = node('tr'); row.append(node('td', worker.name), node('td', worker.platform));
+    const labels = Object.entries(worker.labels || {}).map(([key, value]) => `${key}=${value}`).join(', ');
+    row.append(node('td', labels || '—'));
+    const presence = node('td'); presence.append(node('span', '', 'dot' + (worker.online ? ' online' : '')), document.createTextNode(worker.online ? 'Online' : 'Offline'));
+    row.append(presence, node('td', relative(worker.age_sec)), node('td', short(worker.current_job))); body.append(row);
+  }
+  if (!workers.length) emptyRow(body, 6, 'No workers registered. Start a worker to connect it.');
+}
+function detailPanel(job) {
+  const panel = node('div');
+  panel.append(node('h3', 'Full command'), node('pre', job.command), node('h3', 'Exit code'), node('div', job.exit_code == null ? '—' : String(job.exit_code)));
+  const requires = Object.entries(job.requires || {});
+  if (requires.length) panel.append(node('h3', 'Requirements'), node('pre', requires.map(([key, value]) => `${key}=${value}`).join('\n')));
+  const logs = node('div', undefined, 'detail-grid');
+  for (const key of ['stdout', 'stderr']) { const block = node('div'); block.append(node('h3', key), node('pre', job[key] || '(empty)')); logs.append(block); }
+  panel.append(logs, node('h3', 'Output files'));
+  const files = node('ul');
+  for (const [name, encoded] of Object.entries(job.output_files || {})) {
+    const bytes = encoded.length * 3 / 4 - (encoded.endsWith('==') ? 2 : encoded.endsWith('=') ? 1 : 0);
+    files.append(node('li', `${name} · ${bytes.toLocaleString()} bytes`));
+  }
+  panel.append(files.childElementCount ? files : node('div', 'No output files', 'muted'));
+  if (job.last_error) panel.append(node('h3', 'Last error'), node('pre', job.last_error));
+  if (job.status === 'pending') {
+    const button = node('button', 'Cancel job'); button.type = 'button';
+    button.addEventListener('click', async () => {
+      button.disabled = true; const version = generation;
+      try { await api(`/jobs/${encodeURIComponent(job.id)}/cancel`, {}); details.delete(job.id); await refresh(true); }
+      catch (error) { if (version === generation) { report(error); if (!blocked) await refresh(true); } }
+      finally { button.disabled = false; }
+    }); panel.append(button);
+  }
+  return panel;
+}
+async function loadDetail(id) {
+  const version = generation;
+  try { const job = await api('/jobs/' + encodeURIComponent(id)); if (version !== generation) return; details.set(id, job); if (expanded === id) renderJobs(); }
+  catch (error) { if (version === generation) report(error); }
+}
+function renderJobs() {
+  const body = $('jobs');
+  const focused = document.activeElement.closest('[data-job-id]')?.dataset.jobId;
+  body.replaceChildren();
+  for (const job of jobs) {
+    const row = node('tr', undefined, 'job-row' + (job.id === highlighted ? ' highlight' : '')); row.tabIndex = 0; row.dataset.jobId = job.id; row.setAttribute('aria-expanded', String(expanded === job.id));
+    const command = node('td', job.command.length > 80 ? job.command.slice(0, 79) + '…' : job.command, 'command'); command.title = job.command;
+    const status = node('td'); const known = ['pending', 'assigned', 'done', 'failed', 'cancelled'].includes(job.status); status.append(node('span', job.status, 'badge' + (known ? ' ' + job.status : '')));
+    const duration = job.finished_at == null ? '—' : `${Math.max(0, job.finished_at - (job.assigned_at ?? job.created_at)).toFixed(1)}s`;
+    row.append(node('td', short(job.id)), command, status, node('td', workers.find(w => w.id === job.assigned_to)?.name || short(job.assigned_to)), node('td', String(job.attempts)), node('td', date(job.created_at)), node('td', duration));
+    const toggle = () => { expanded = expanded === job.id ? null : job.id; renderJobs(); if (expanded) loadDetail(job.id); };
+    row.addEventListener('click', toggle); row.addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); toggle(); } }); body.append(row);
+    if (expanded === job.id) { const detail = node('tr', undefined, 'detail'), cell = node('td'); cell.colSpan = 7; cell.append(details.has(job.id) ? detailPanel(details.get(job.id)) : node('p', 'Loading job details…')); detail.append(cell); body.append(detail); }
+    if (focused === job.id) row.focus({preventScroll:true});
+  }
+  if (!jobs.length) emptyRow(body, 7, 'No jobs yet. Submit your first command below.');
+}
+function schedule() { clearTimeout(timer); if (!paused && !blocked) timer = setTimeout(refresh, 3000); }
+async function refresh(force = false) {
+  if (blocked || (paused && !force)) return;
+  if (refreshing) { if (force) { await refreshing; return refresh(true); } return; }
+  const version = generation;
+  const run = async () => {
+    try {
+      try { await api('/health'); if (version !== generation) return; $('health-dot').className = 'dot online'; $('health-label').textContent = 'Coordinator online'; }
+      catch (error) { if (version === generation) { $('health-dot').className = 'dot'; $('health-label').textContent = 'Coordinator unreachable'; } throw error; }
+      const nextWorkers = await api('/workers');
+      const nextJobs = await api('/jobs');
+      if (version !== generation || blocked) return;
+      workers = nextWorkers; jobs = nextJobs.sort((a,b) => b.created_at - a.created_at);
+      $('stat-workers').textContent = `${workers.filter(w => w.online).length}/${workers.length}`;
+      for (const status of ['pending', 'assigned', 'done', 'failed']) $('stat-' + status).textContent = jobs.filter(j => j.status === status).length;
+      banner(''); renderWorkers(); renderJobs();
+      $('updated').textContent = 'Updated ' + new Date().toLocaleTimeString();
+      if (expanded) await loadDetail(expanded);
+    } catch (error) { if (version === generation) report(error); }
+  };
+  refreshing = run();
+  try { await refreshing; } finally { refreshing = false; schedule(); }
+}
+$('token').addEventListener('input', () => {
+  generation++; stopRequests(); blocked = false; clearTimeout(timer); details.clear(); banner(''); refreshLabel();
+  try { localStorage.setItem('sharecompute-token', $('token').value); } catch (_) { /* Continue without storage. */ }
+  refresh(true);
+});
+$('pause').addEventListener('click', () => { paused = !paused; $('pause').textContent = paused ? 'Play refresh' : 'Pause refresh'; $('pause').setAttribute('aria-pressed', String(paused)); refreshLabel(); clearTimeout(timer); if (!paused) refresh(); });
+$('submit-form').addEventListener('submit', async event => {
+  event.preventDefault(); const timeout = Number($('timeout').value), command = $('command').value;
+  if (!command.trim() || !Number.isFinite(timeout) || timeout <= 0) { banner('Enter a command and a positive timeout.'); return; }
+  $('submit').disabled = true; const version = generation;
+  try { const result = await api('/jobs', {command, timeout_sec:timeout}); if (version !== generation) return; highlighted = result.job_id; $('submit-message').textContent = 'Submitted job ' + result.job_id; await refresh(true); }
+  catch (error) { if (version === generation) report(error); }
+  finally { $('submit').disabled = false; }
+});
+refresh();
+</script>
+</body>
+</html>
